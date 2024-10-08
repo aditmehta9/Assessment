@@ -87,7 +87,9 @@ The server logs API requests and errors in a `server.log` file located in the pr
 
 ## Follow Up
 **1. Explain the architecture of your WebSocket server and RESTful API server. How have you structured your code to handle different endpoints and requests efficiently?**:
+
 **Architecture of WebSocket Server and RESTful API Server**
+
 **1. WebSocket Server:**
 
 The WebSocket server is designed to handle real-time communication between clients. It is implemented using the ws library, which is a simple and efficient WebSocket library for Node.js. This server allows multiple clients to connect and broadcast messages to all connected clients. The architecture ensures each client is assigned a unique Client ID upon connection, which helps identify and manage individual clients during communication.
@@ -111,6 +113,7 @@ Key Features:
 **3. Code Structure:**
 
 The code is structured in a modular way to handle different endpoints efficiently. Middleware is used to log all incoming requests and handle errors. Each endpoint (POST, GET, PUT, DELETE) has a specific function for resource management, making it easy to extend the functionality in the future by adding new routes or modifying existing ones.
+
 **4. Error Handling:**
 
 A dedicated error-handling middleware is added at the end of the middleware stack to catch unhandled errors, ensuring the server doesn't crash and provides informative error messages to clients. It logs the error stack trace to the console and sends a generic "Something went wrong!" message to the client with a 500 status code for server-side errors.
