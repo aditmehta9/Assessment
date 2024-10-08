@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket & REST API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; }
+        #messages, #resources, #errors { margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>WebSocket Server</h1>
+    <input type="text" id="wsMessage" placeholder="Type a message..." />
+    <button onclick="sendWebSocketMessage()">Send Message</button>
+    <div id="messages"></div>
+</div>
+
+<div class="container">
+    <h1>REST API Server</h1>
+
+    <h2>Create Resource</h2>
+    <input type="text" id="resourceId" placeholder="Resource ID" />
+    <input type="text" id="resourceName" placeholder="Resource Name" />
+    <button onclick="createResource()">Create Resource</button>
+    
+    <h2>Get Resources</h2>
+    <button onclick="getResources()">Get All Resources</button>
+    <div id="resources"></div>
+
+    <h2>Update Resource</h2>
+    <input type="text" id="updateResourceId" placeholder="Resource ID to Update" />
+    <input type="text" id="updateResourceName" placeholder="New Resource Name" />
+    <button onclick="updateResource()">Update Resource</button>
+    
+    <h2>Delete Resource</h2>
+    <input type="text" id="deleteResourceId" placeholder="Resource ID to Delete" />
+    <button onclick="deleteResource()">Delete Resource</button>
+
+    <div id="errors"></div>
+</div>
+
+<script>
+    let clientId = null;  // Store the client's ID
+
+    // WebSocket Connection
+    const ws = new WebSocket('ws://localhost:8080');
+
+    ws.onopen = () => {
+        console.log('Connected to WebSocket server');
+        document.getElementById('messages').innerHTML += `<p>Connected to WebSocket server</p>`;
+    };
+
+    ws.onmessage = (event) => {
+        console.log('Received:', event.data);
+        document.getElementById('messages').innerHTML += `<p>${event.data}</p>`;
+    };
+
+    ws.onclose = () => {
+        console.log('Disconnected from WebSocket server');
+        document.getElementById('messages').innerHTML += `<p>Disconnected from WebSocket server</p>`;
+    };
+
+    function sendWebSocketMessage() {
+        const message = document.getElementById('wsMessage').value;
+
+        // Send message to the server (including the clientId on server-side)
+        ws.send(JSON.stringify({ message }));
+
+        document.getElementById('messages').innerHTML += `<p>You: ${message}</p>`;
+    }
+
+
+    // REST API Functions
+    async function createResource() {
+        const id = document.getElementById('resourceId').value;
+        const name = document.getElementById('resourceName').value;
+
+        try {
+            const response = await fetch('http://localhost:3000/resources', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, name })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('resources').innerHTML += `<p>Created: ${JSON.stringify(data)}</p>`;
+            } else {
+                throw new Error(data.error || 'Failed to create resource');
+            }
+        } catch (err) {
+            document.getElementById('errors').innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+        }
+    }
+
+    async function getResources() {
+        const response = await fetch('http://localhost:3000/resources');
+        const data = await response.json();
+        document.getElementById('resources').innerHTML = `<p>Resources: ${JSON.stringify(data)}</p>`;
+    }
+
+    async function updateResource() {
+        const id = document.getElementById('updateResourceId').value;
+        const name = document.getElementById('updateResourceName').value;
+
+        try {
+            const response = await fetch(`http://localhost:3000/resources/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, name })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('resources').innerHTML += `<p>Updated: ${JSON.stringify(data)}</p>`;
+            } else {
+                throw new Error(data.error || 'Failed to update resource');
+            }
+        } catch (err) {
+            document.getElementById('errors').innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+        }
+    }
+
+    async function deleteResource() {
+        const id = document.getElementById('deleteResourceId').value;
+
+        try {
+            const response = await fetch(`http://localhost:3000/resources/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                document.getElementById('resources').innerHTML += `<p>Deleted resource with ID: ${id}</p>`;
+            } else {
+                throw new Error('Resource not found');
+            }
+        } catch (err) {
+            document.getElementById('errors').innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+        }
+    }
+</script>
+
+</body>
+</html>
